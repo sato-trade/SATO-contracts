@@ -15,6 +15,6 @@ The core contract related to rebase policy. This is where rebase operations are 
 
 # Oracle
 
-The core contract related to the price oracle. This contract receives price updates from the Uniswap Oracle(s), and regularly works with the SATO policy to trigger rebases.
+The core contract related to the price oracle. This contract receives price updates from the SwapAll Oracle(s), and regularly works with the SATO policy to trigger rebases.
 
 
