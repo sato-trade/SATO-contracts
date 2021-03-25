@@ -1,9 +1,5 @@
 /**
- *Submitted for verification at Etherscan.io on 2021-03-01
-*/
-
-/**
- *Submitted for verification at Etherscan.io on 2020-10-19
+ *Submitted for verification at Etherscan.io on 2021-03-19
 */
 
 pragma solidity 0.4.24;
