@@ -1,13 +1,5 @@
 /**
- *Submitted for verification at Etherscan.io on 2021-02-18
-*/
-
-/**
- *Submitted for verification at Etherscan.io on 2020-07-14
-*/
-
-/**
- *Submitted for verification at Etherscan.io on 2020-05-27
+ *Submitted for verification at Etherscan.io on 2021-03-19
 */
 
 // File: zos-lib/contracts/Initializable.sol
@@ -173,7 +165,7 @@ library SafeMath {
   */
   function mul(uint256 a, uint256 b) internal pure returns (uint256) {
     // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-    // benefit is lost if 'b' is also tested.
+    // benefit is lost if 'b' is also SATOed.
     // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
     if (a == 0) {
       return 0;
@@ -232,7 +224,7 @@ library SafeMath {
 MIT License
 
 Copyright (c) 2018 requestnetwork
-Copyright (c) 2018 Test, Inc.
+Copyright (c) 2018 SATO, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -444,22 +436,22 @@ contract ERC20Detailed is Initializable, IERC20 {
 }
 
 
-// File: contracts/Test.sol
+// File: contracts/SATO.sol
 
 pragma solidity 0.4.24;
 
 
 /**
- * @title Test ERC20 token
- * @dev This is part of an implementation of the Test Ideal Money protocol.
- *      Test is a normal ERC20 token, but its supply can be adjusted by splitting and
+ * @title SATO ERC20 token
+ * @dev This is part of an implementation of the SATO Ideal Money protocol.
+ *      SATO is a normal ERC20 token, but its supply can be adjusted by splitting and
  *      combining tokens proportionally across all wallets.
  *
  *      uFragment balances are internally represented with a hidden denomination, 'gons'.
  *      We support splitting the currency in expansion and combining the currency on contraction by
  *      changing the exchange rate between the hidden 'gons' and the public 'fragments'.
  */
-contract Test is ERC20Detailed, Ownable {
+contract SATO is ERC20Detailed, Ownable {
     // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
     // Anytime there is division, there is a risk of numerical instability from rounding errors. In
     // order to minimize this risk, we adhere to the following guidelines:
@@ -467,12 +459,12 @@ contract Test is ERC20Detailed, Ownable {
     //    The inverse rate must not be used--TOTAL_GONS is always the numerator and _totalSupply is
     //    always the denominator. (i.e. If you want to convert gons to fragments instead of
     //    multiplying by the inverse rate, you should divide by the normal rate)
-    // 2) Gon balances converted into Test are always rounded down (truncated).
+    // 2) Gon balances converted into SATO are always rounded down (truncated).
     //
     // We make the following guarantees:
-    // - If address 'A' transfers x Test to address 'B'. A's resulting external balance will
-    //   be decreased by precisely x Test, and B's external balance will be precisely
-    //   increased by x Test.
+    // - If address 'A' transfers x SATO to address 'B'. A's resulting external balance will
+    //   be decreased by precisely x SATO, and B's external balance will be precisely
+    //   increased by x SATO.
     //
     // We do not guarantee that the sum of all balances equals the result of calling totalSupply().
     // This is because, for any conversion function 'f()' that has non-zero rounding error,
@@ -483,13 +475,13 @@ contract Test is ERC20Detailed, Ownable {
     event LogRebase(uint256 indexed epoch, uint256 totalSupply);
     event LogRebasePaused(bool paused);
     event LogTokenPaused(bool paused);
-    event LogTestPolicyUpdated(address TestPolicy);
+    event LogSATOPolicyUpdated(address SATOPolicy);
 
     // Used for authentication
-    address public TestPolicy;
+    address public SATOPolicy;
 
-    modifier onlyTestPolicy() {
-        require(msg.sender == TestPolicy);
+    modifier onlySATOPolicy() {
+        require(msg.sender == SATOPolicy);
         _;
     }
 
@@ -515,11 +507,11 @@ contract Test is ERC20Detailed, Ownable {
 
     uint256 private constant DECIMALS = 9;
     uint256 private constant MAX_UINT256 = ~uint256(0);
-    uint256 private constant INITIAL_Test_SUPPLY = 50000000 * 10**DECIMALS;
+    uint256 private constant INITIAL_SATO_SUPPLY = 5000000 * 10**DECIMALS;
 
-    // TOTAL_GONS is a multiple of INITIAL_Test_SUPPLY so that _gonsPerFragment is an integer.
+    // TOTAL_GONS is a multiple of INITIAL_SATO_SUPPLY so that _gonsPerFragment is an integer.
     // Use the highest value that fits in a uint256 for max granularity.
-    uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_Test_SUPPLY);
+    uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_SATO_SUPPLY);
 
     // MAX_SUPPLY = maximum integer < (sqrt(4*TOTAL_GONS + 1) - 1) / 2
     uint256 private constant MAX_SUPPLY = ~uint128(0);  // (2^128) - 1
@@ -528,19 +520,19 @@ contract Test is ERC20Detailed, Ownable {
     uint256 private _gonsPerFragment;
     mapping(address => uint256) private _gonBalances;
 
-    // This is denominated in Test, because the gons-fragments conversion might change before
+    // This is denominated in SATO, because the gons-fragments conversion might change before
     // it's fully paid.
-    mapping (address => mapping (address => uint256)) private _allowedTest;
+    mapping (address => mapping (address => uint256)) private _allowedSATO;
 
     /**
-     * @param TestPolicy_ The address of the Test policy contract to use for authentication.
+     * @param SATOPolicy_ The address of the SATO policy contract to use for authentication.
      */
-    function setTestPolicy(address TestPolicy_)
+    function setSATOPolicy(address SATOPolicy_)
         external
         onlyOwner
     {
-        TestPolicy = TestPolicy_;
-        emit LogTestPolicyUpdated(TestPolicy_);
+        SATOPolicy = SATOPolicy_;
+        emit LogSATOPolicyUpdated(SATOPolicy_);
     }
 
     /**
@@ -568,13 +560,13 @@ contract Test is ERC20Detailed, Ownable {
     }
 
     /**
-     * @dev Notifies Test contract about a new rebase cycle.
+     * @dev Notifies SATO contract about a new rebase cycle.
      * @param supplyDelta The number of new fragment tokens to add into circulation via expansion.
      * @return The total number of fragments after the supply adjustment.
      */
     function rebase(uint256 epoch, int256 supplyDelta)
         external
-        onlyTestPolicy
+        onlySATOPolicy
         whenRebaseNotPaused
         returns (uint256)
     {
@@ -614,13 +606,13 @@ contract Test is ERC20Detailed, Ownable {
         public
         initializer
     {
-        ERC20Detailed.initialize("Ramifi Token", "RAM", uint8(DECIMALS));
+        ERC20Detailed.initialize("SwapAll Algorithmic Token", "SATO", uint8(DECIMALS));
         Ownable.initialize(owner_);
 
         rebasePaused = false;
         tokenPaused = false;
 
-        _totalSupply = INITIAL_Test_SUPPLY;
+        _totalSupply = INITIAL_SATO_SUPPLY;
         _gonBalances[owner_] = TOTAL_GONS;
         _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
 
@@ -680,7 +672,7 @@ contract Test is ERC20Detailed, Ownable {
         view
         returns (uint256)
     {
-        return _allowedTest[owner_][spender];
+        return _allowedSATO[owner_][spender];
     }
 
     /**
@@ -695,7 +687,7 @@ contract Test is ERC20Detailed, Ownable {
         whenTokenNotPaused
         returns (bool)
     {
-        _allowedTest[from][msg.sender] = _allowedTest[from][msg.sender].sub(value);
+        _allowedSATO[from][msg.sender] = _allowedSATO[from][msg.sender].sub(value);
 
         uint256 gonValue = value.mul(_gonsPerFragment);
         _gonBalances[from] = _gonBalances[from].sub(gonValue);
@@ -721,7 +713,7 @@ contract Test is ERC20Detailed, Ownable {
         whenTokenNotPaused
         returns (bool)
     {
-        _allowedTest[msg.sender][spender] = value;
+        _allowedSATO[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
         return true;
     }
@@ -738,9 +730,9 @@ contract Test is ERC20Detailed, Ownable {
         whenTokenNotPaused
         returns (bool)
     {
-        _allowedTest[msg.sender][spender] =
-            _allowedTest[msg.sender][spender].add(addedValue);
-        emit Approval(msg.sender, spender, _allowedTest[msg.sender][spender]);
+        _allowedSATO[msg.sender][spender] =
+            _allowedSATO[msg.sender][spender].add(addedValue);
+        emit Approval(msg.sender, spender, _allowedSATO[msg.sender][spender]);
         return true;
     }
 
@@ -755,18 +747,18 @@ contract Test is ERC20Detailed, Ownable {
         whenTokenNotPaused
         returns (bool)
     {
-        uint256 oldValue = _allowedTest[msg.sender][spender];
+        uint256 oldValue = _allowedSATO[msg.sender][spender];
         if (subtractedValue >= oldValue) {
-            _allowedTest[msg.sender][spender] = 0;
+            _allowedSATO[msg.sender][spender] = 0;
         } else {
-            _allowedTest[msg.sender][spender] = oldValue.sub(subtractedValue);
+            _allowedSATO[msg.sender][spender] = oldValue.sub(subtractedValue);
         }
-        emit Approval(msg.sender, spender, _allowedTest[msg.sender][spender]);
+        emit Approval(msg.sender, spender, _allowedSATO[msg.sender][spender]);
         return true;
     }
 }
 
-// File: contracts/TestPolicy.sol
+// File: contracts/SATOPolicy.sol
 
 pragma solidity 0.4.24;
 
@@ -777,15 +769,15 @@ interface IOracle {
 
 
 /**
- * @title Test Monetary Supply Policy
- * @dev This is an implementation of the Test Ideal Money protocol.
- *      Test operates symmetrically on expansion and contraction. It will both split and
+ * @title SATO Monetary Supply Policy
+ * @dev This is an implementation of the SATO Ideal Money protocol.
+ *      SATO operates symmetrically on expansion and contraction. It will both split and
  *      combine coins to maintain a stable unit price.
  *
- *      This component regulates the token supply of the Test ERC20 token in response to
+ *      This component regulates the token supply of the SATO ERC20 token in response to
  *      market oracles.
  */
-contract TestPolicy is Ownable {
+contract SATOPolicy is Ownable {
     using SafeMath for uint256;
     using SafeMathInt for int256;
     using UInt256Lib for uint256;
@@ -798,7 +790,7 @@ contract TestPolicy is Ownable {
         uint256 timestampSec
     );
 
-    Test public uFrags;
+    SATO public uFrags;
 
     // Provides the current CPI, as an 18 decimal fixed point number.
     IOracle public cpiOracle;
@@ -901,6 +893,37 @@ contract TestPolicy is Ownable {
         assert(supplyAfterRebase <= MAX_SUPPLY);
         emit LogRebase(epoch, exchangeRate, cpi, supplyDelta, now);
     }
+    
+    /**
+     * @notice Emergency rebase by owner.
+     *
+     * @dev The supply adjustment equals (_totalSupply * DeviationFromTargetRate) / rebaseLag
+     *      Where DeviationFromTargetRate is (MarketOracleRate - targetRate) / targetRate
+     *      and targetRate is 1
+     */
+    function EmergencyRebase(uint256 _price) external onlyOrchestrator {
+        epoch = epoch.add(1);
+
+        uint256 targetRate = 1;
+
+        uint256 exchangeRate = _price;
+        if (exchangeRate > MAX_RATE) {
+            exchangeRate = MAX_RATE;
+        }
+
+        int256 supplyDelta = computeSupplyDelta(exchangeRate, targetRate);
+
+        // Apply the Dampening factor.
+        supplyDelta = supplyDelta.div(rebaseLag.toInt256Safe());
+
+        if (supplyDelta > 0 && uFrags.totalSupply().add(uint256(supplyDelta)) > MAX_SUPPLY) {
+            supplyDelta = (MAX_SUPPLY.sub(uFrags.totalSupply())).toInt256Safe();
+        }
+
+        uint256 supplyAfterRebase = uFrags.rebase(epoch, supplyDelta);
+        assert(supplyAfterRebase <= MAX_SUPPLY);
+        emit LogRebase(epoch, exchangeRate, _price, supplyDelta, now);
+    }
 
     /**
      * @notice Sets the reference to the CPI oracle.
@@ -996,7 +1019,7 @@ contract TestPolicy is Ownable {
      *      It is called at the time of contract creation to invoke parent class initializers and
      *      initialize the contract's state variables.
      */
-    function initialize(address owner_, Test uFrags_, uint256 baseCpi_)
+    function initialize(address owner_, SATO uFrags_, uint256 baseCpi_)
         public
         initializer
     {
@@ -1017,7 +1040,7 @@ contract TestPolicy is Ownable {
     }
 
     /**
-     * @return If the latest block timestamp is within the rebase time window it, returns true.
+     * @return If the laSATO block timestamp is within the rebase time window it, returns true.
      *         Otherwise, returns false.
      */
     function inRebaseWindow() public view returns (bool) {
@@ -1089,15 +1112,15 @@ contract Orchestrator is Ownable {
     // Stable ordering is not guaranteed.
     Transaction[] public transactions;
 
-    TestPolicy public policy;
+    SATOPolicy public policy;
     mapping(address => bool) public isAdmin;
 
     /**
-     * @param policy_ Address of the Test policy.
+     * @param policy_ Address of the SATO policy.
      */
     constructor(address policy_) public {
         Ownable.initialize(msg.sender);
-        policy = TestPolicy(policy_);
+        policy = SATOPolicy(policy_);
     }
     
      function addAdmin(address _admin)
@@ -1134,6 +1157,14 @@ contract Orchestrator is Ownable {
                 }
             }
         }
+    }
+    
+    // Emergency Rebase
+    function EmergencyRebase(uint256 _price)
+        external 
+        onlyAdmin
+    {
+        policy.EmergencyRebase(_price);
     }
 
     /**

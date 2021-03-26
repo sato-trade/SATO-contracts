@@ -1,9 +1,5 @@
 /**
- *Submitted for verification at Etherscan.io on 2021-03-01
-*/
-
-/**
- *Submitted for verification at Etherscan.io on 2020-10-19
+ *Submitted for verification at Etherscan.io on 2021-03-19
 */
 
 pragma solidity 0.4.24;
@@ -818,6 +814,37 @@ contract SATOPolicy is Ownable {
         (exchangeRate, rateValid) = marketOracle.getData();
         require(rateValid);
 
+        if (exchangeRate > MAX_RATE) {
+            exchangeRate = MAX_RATE;
+        }
+
+        int256 supplyDelta = computeSupplyDelta(exchangeRate, targetRate);
+
+        // Apply the Dampening factor.
+        supplyDelta = supplyDelta.div(rebaseLag.toInt256Safe());
+
+        if (supplyDelta > 0 && uFrags.totalSupply().add(uint256(supplyDelta)) > MAX_SUPPLY) {
+            supplyDelta = (MAX_SUPPLY.sub(uFrags.totalSupply())).toInt256Safe();
+        }
+
+        uint256 supplyAfterRebase = uFrags.rebase(epoch, supplyDelta);
+        assert(supplyAfterRebase <= MAX_SUPPLY);
+        emit LogRebase(epoch, exchangeRate, supplyDelta, now);
+    }
+    
+    /**
+     * @notice Emergency rebase by owner.
+     *
+     * @dev The supply adjustment equals (_totalSupply * DeviationFromTargetRate) / rebaseLag
+     *      Where DeviationFromTargetRate is (MarketOracleRate - targetRate) / targetRate
+     *      and targetRate is 1
+     */
+    function EmergencyRebase(uint256 _price) external onlyOrchestrator {
+        epoch = epoch.add(1);
+
+        uint256 targetRate = TARGET_RATE;
+
+        uint256 exchangeRate = _price;
         if (exchangeRate > MAX_RATE) {
             exchangeRate = MAX_RATE;
         }
